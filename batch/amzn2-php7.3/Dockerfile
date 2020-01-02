@@ -25,8 +25,8 @@ RUN pip install awscli
 RUN groupadd -g ${PGID} app
 RUN useradd -u ${PUID} -g app appadm
 
-# PHP-7.2のインストール
-RUN amazon-linux-extras install -y php7.2
+# PHP-7.3のインストール
+RUN amazon-linux-extras install -y php7.3
 RUN yum install -y php-cli php-common php-mbstring php-process \
 	php-xml php-xmlrpc php-soap php-json php-curl php-gd \
 	php-opcache php-pdo php-mysqlnd

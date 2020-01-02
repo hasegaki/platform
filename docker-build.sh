@@ -2,8 +2,9 @@
 PROGRAM=`basename $0`
 VENDOR=hasegaki
 WEBAP=webap
-WEBAP_TAGS="amzn2-httpd2.4-php7.2:amzn2:latest \
-	alpine3.8-httpd2.4-php7.2:alpine \
+WEBAP_TAGS="amzn2-httpd2.4-php7.3:amzn2:latest \
+	amzn2-httpd2.4-php7.2 \
+	alpine3.8-httpd2.4-php7.2 \
 	alpine3.8-httpd2.4-php5.6 \
 	alpine3.8-httpd2.0-php4.3 \
 	amzn-httpd2.4-php7.2:amzn \
@@ -14,7 +15,8 @@ WEBAP_TAGS="amzn2-httpd2.4-php7.2:amzn2:latest \
 	centos6.10-httpd2.2-php5.4"
 
 BATCH=batch
-BATCH_TAGS="amzn2-php7.2:amzn2:latest \
+BATCH_TAGS="amzn2-php7.3:amzn2:latest \
+	amzn2-php7.2 \
 	alpine3.8-php7.2:alpine"
 
 SUBCMD=$1

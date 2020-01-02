@@ -25,8 +25,8 @@ RUN pip install awscli
 RUN groupadd -g ${PGID} app
 RUN useradd -u ${PUID} -g app appadm
 
-# PHP-7.2のインストール
-RUN amazon-linux-extras install -y php7.2
+# PHP-7.3のインストール
+RUN amazon-linux-extras install -y php7.3
 RUN yum install -y php-cli php-common php-mbstring php-process \
 	php-xml php-xmlrpc php-soap php-json php-curl php-gd \
 	php-opcache php-pdo php-mysqlnd
@@ -40,6 +40,27 @@ RUN curl -sS https://getcomposer.org/installer | php \
 # Node.js、npmのインストール
 RUN yum install -y npm nodejs
 
+# httpd-2.4のインストール
+RUN yum install -y httpd php
+
+# httpdログの出力先変更
+RUN ln -s /proc/self/fd/2 /var/log/httpd/access_log \
+ && ln -s /proc/self/fd/2 /var/log/httpd/error_log
+
+# httpd.confの変更
+RUN echo "IncludeOptional virtualhost.d/*.conf" >> /etc/httpd/conf/httpd.conf \
+ && sed -i -E 's/^Listen\s+(.*)$/Listen 0.0.0.0:80/' /etc/httpd/conf/httpd.conf \
+ && sed -i -E 's/^User\s+(.*)$/User appadm/' /etc/httpd/conf/httpd.conf \ 
+ && sed -i -E 's/^Group\s+(.*)$/Group app/' /etc/httpd/conf/httpd.conf \
+ && mkdir /etc/httpd/virtualhost.d
+
+# application.conf
+ADD application.conf /etc/httpd/virtualhost.d/application.conf
+RUN dos2unix /etc/httpd/virtualhost.d/application.conf
+RUN mkdir /var/log/httpd/application \
+ && ln -s /proc/self/fd/2 /var/log/httpd/application/access_log \
+ && ln -s /proc/self/fd/2 /var/log/httpd/application/error_log
+
 # 起動時ディレクトリ
 RUN mkdir -p /var/www/application \
  && chown appadm:app /var/www/application
@@ -49,7 +70,7 @@ WORKDIR /var/www/application
 ADD ./docker-entrypoint.sh /
 RUN dos2unix /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh
 ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["bash"]
+CMD ["/usr/sbin/httpd", "-D", "FOREGROUND"]
 
 # 開放ポート番号
-EXPOSE 22
+EXPOSE 80
