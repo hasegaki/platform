@@ -17,7 +17,7 @@ RUN apk add autoconf dpkg-dev dpkg file g++ gcc make pkgconf re2c \
 	bison flex gettext gettext-dev libmcrypt libmcrypt-dev \
 	postgresql-libs postgresql-dev
 
-ADD httpd-2.0.65.tar.gz /usr/local/src
+ADD src/httpd-2.0.65.tar.gz /usr/local/src
 WORKDIR /usr/local/src/httpd-2.0.65
 RUN ./configure \
 	--with-z \
@@ -34,7 +34,7 @@ RUN ./configure \
 RUN make all install \
  && rm -rf /usr/local/src/httpd-2.0.65
 
-ADD php-4.3.11.tar.gz /usr/local/src
+ADD src/php-4.3.11.tar.gz /usr/local/src
 WORKDIR /usr/local/src/php-4.3.11
 RUN ./configure \
 	--enable-mbstring \
