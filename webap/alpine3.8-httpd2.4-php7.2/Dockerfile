@@ -3,25 +3,29 @@ ARG PUID=1000
 ARG PGID=1000
 
 ENV TZ=Asia/Tokyo
-#ENV LANG=ja_JP.utf8
 
 # 各種パッケージのインストール
-RUN apk add sudo shadow bash curl dos2unix rsync git zip unzip
-RUN apk add python3 openssh-server supervisor
+RUN apk update \
+ && apk add sudo shadow coreutils gzip zip unzip dos2unix \
+	zlib zlib-dev curl curl-dev tar xz sed coreutils \
+	ca-certificates gnupg wget rsync \
+	python3 supervisor openssh openssl \
+	bash git openssh-server \
+ && apk add --update tzdata
 
 # PIP、AWS CLIのインストール
-RUN curl https://bootstrap.pypa.io/get-pip.py | python3
-RUN pip install awscli
+RUN curl https://bootstrap.pypa.io/get-pip.py | python3 \
+ && pip install awscli
 
 # ユーザ／グループの追加
-RUN addgroup -g ${PGID} app
-RUN adduser -D -u ${PUID} -G app appadm
+RUN addgroup -g ${PGID} app \
+ && adduser -D -u ${PUID} -G app appadm
 
 # PHP-7.2のインストール
 RUN apk add php7 php7-common php7-zip php7-bz2 php7-mbstring php-session \
-  php7-curl php7-gd php7-tokenizer php7-phar php7-openssl \
-  php7-xml php7-simplexml php7-xmlwriter php7-dom php7-json php7-fileinfo \
-  php7-pdo php7-pdo_mysql php7-mysqlnd
+	php7-curl php7-gd php7-tokenizer php7-phar php7-openssl \
+	php7-xml php7-simplexml php7-xmlwriter php7-dom php7-json php7-fileinfo \
+	php7-pdo php7-pdo_mysql php7-mysqlnd
 
 # composerのインストール
 RUN curl -sS https://getcomposer.org/installer | php \
@@ -46,8 +50,8 @@ RUN echo "IncludeOptional /etc/apache2/virtualhost.d/*.conf" >> /etc/apache2/htt
  && sed -i -E 's/^User\s+apache$/User appadm/' /etc/apache2/httpd.conf \
  && sed -i -E 's/^(#|)(LoadModule\srewrite_module)\s+(.*)$/\2 \3/' /etc/apache2/httpd.conf
 ADD application.conf /etc/apache2/virtualhost.d/application.conf
-RUN dos2unix /etc/apache2/virtualhost.d/application.conf
-RUN mkdir /var/log/apache2/application \
+RUN dos2unix /etc/apache2/virtualhost.d/application.conf \
+ && mkdir /var/log/apache2/application \
  && ln -s /proc/self/fd/2 /var/log/apache2/application/access.log \
  && ln -s /proc/self/fd/2 /var/log/apache2/application/error.log
 

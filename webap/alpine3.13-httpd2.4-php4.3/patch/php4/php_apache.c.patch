@@ -1,0 +1,20 @@
+--- sapi/apache/php_apache.c.orig
++++ sapi/apache/php_apache.c
+@@ -159,7 +159,7 @@
+  */
+ PHP_MINFO_FUNCTION(apache)
+ {
+-	char *apv = (char *) ap_get_server_version();
++	char *apv = (char *) ap_get_server_banner();
+ 	module *modp = NULL;
+ 	char output_buf[128];
+ #if !defined(WIN32) && !defined(WINNT)
+@@ -481,7 +481,7 @@
+    Fetch Apache version */
+ PHP_FUNCTION(apache_get_version)
+ {       
+-	char *apv = (char *) ap_get_server_version();
++	char *apv = (char *) ap_get_server_banner();
+ 
+ 	if (apv && *apv) {
+ 		RETURN_STRING(apv, 1);

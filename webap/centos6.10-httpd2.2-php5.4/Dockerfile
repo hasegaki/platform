@@ -2,23 +2,26 @@ FROM library/centos:6.10
 ARG PUID=1000
 ARG PGID=1000
 
+
 # 各種パッケージのインストール
-RUN yum update -y
-RUN yum install -y http://rpms.famillecollet.com/enterprise/remi-release-6.rpm
-RUN yum install -y yum-utils
-RUN yum-config-manager --enable remi-php54
-RUN yum clean all && yum makecache
-RUN yum install -y dos2unix
+RUN sed -i -e "s/^mirrorlist=http:\/\/mirrorlist.centos.org/#mirrorlist=http:\/\/mirrorlist.centos.org/g" /etc/yum.repos.d/CentOS-Base.repo \
+ && sed -i -e "s/^#baseurl=http:\/\/mirror.centos.org/baseurl=http:\/\/vault.centos.org/g" /etc/yum.repos.d/CentOS-Base.repo
+RUN yum update -y \
+ && yum install -y http://rpms.famillecollet.com/enterprise/remi-release-6.rpm \
+ && yum install -y yum-utils \
+ && yum-config-manager --enable remi-php54 \
+ && yum clean all && yum makecache \
+ && yum reinstall -y glibc-common \
+ && yum install -y dos2unix
 
 # 日本語化
-RUN yum reinstall -y glibc-common
 ENV LANG ja_JP.UTF-8 
 ENV LANGUAGE ja_JP:ja
 ENV LANGUAGE ja_JP:ja
 
-RUN echo 'ZONE="Asia/Tokyo"' > /etc/sysconfig/clock 
-RUN rm -f /etc/localtime
-RUN ln -fs /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
+RUN echo 'ZONE="Asia/Tokyo"' > /etc/sysconfig/clock  \
+ && rm -f /etc/localtime \
+ && ln -fs /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
 
 
 # PHPのインストール
@@ -26,8 +29,8 @@ RUN yum install -y php-cli php-common php-mbstring php-pear php-curl \
 	php-xml php-xmlrpc php-mysqlnd php-pdo
 
 # ユーザ／グループの追加
-RUN groupadd -g ${PGID} app
-RUN useradd -u ${PUID} -G app appadm
+RUN groupadd -g ${PGID} app \
+ && useradd -u ${PUID} -G app appadm
 
 # httpd-2.4のインストール
 RUN yum install -y httpd php
@@ -43,8 +46,8 @@ RUN echo "Include virtualhost.d/*.conf" >> /etc/httpd/conf/httpd.conf \
  && sed -i -E 's/^User\s+apache$/User appadm/' /etc/httpd/conf/httpd.conf
 
 ADD application.conf.httpd2.2 /etc/httpd/virtualhost.d/application.conf
-RUN dos2unix /etc/httpd/virtualhost.d/application.conf
-RUN mkdir /var/log/httpd/application \
+RUN dos2unix /etc/httpd/virtualhost.d/application.conf \
+ && mkdir /var/log/httpd/application \
  && ln -s /proc/self/fd/2 /var/log/httpd/application/access_log \
  && ln -s /proc/self/fd/2 /var/log/httpd/application/error_log
 

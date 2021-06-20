@@ -1,4 +1,4 @@
-FROM amazonlinux:2
+FROM amazonlinux:2 as builder
 ARG PUID=1000
 ARG PGID=1000
 
@@ -6,28 +6,25 @@ ENV TZ=Asia/Tokyo
 #ENV LANG=ja_JP.utf8
 
 # インストール済みのパッケージをアップデート＆キャッシュのクリア
-RUN yum install -y deltarpm
-#RUN yum update -y
-RUN amazon-linux-extras install -y epel
-RUN yum clean all && yum makecache
+RUN yum install -y deltarpm \
+ && amazon-linux-extras install -y epel \
+ && yum clean all && yum makecache
 
 # 各種パッケージのインストール
-RUN yum install -y yum-utils iproute iputils net-tools tcpdump procps
-RUN yum install -y sudo rsync git zip unzip dos2unix
-RUN yum install -y cronie cronie-noanacron crontabs
-RUN yum install -y openssh-server python3 supervisor
-
-# PIP、AWS CLIのインストール
-RUN curl https://bootstrap.pypa.io/get-pip.py | python3
-RUN pip install awscli
+RUN yum install -y yum-utils iproute iputils net-tools tcpdump procps \
+	sudo rsync git zip unzip dos2unix \
+	cronie cronie-noanacron crontabs \
+	openssh-server python3 supervisor \
+ && pip3 install awscli
 
 # ユーザ／グループの追加
-RUN groupadd -g ${PGID} app
-RUN useradd -u ${PUID} -g app appadm
+ENV PASSWORD='$6$uDkHrAR3$D1IA0AFwTAcBF6bIGjXERhlwHx2S3hZ0N4855G3wNgSjr9KDd4NLM4iQq2wLt0rdE3tUfw2E2/MFnm8LMLiZ2.'
+RUN groupadd -g ${PGID} app \
+ && useradd -u ${PUID} -g app -p ${PASSWORD} appadm
 
 # PHP-7.2のインストール
-RUN amazon-linux-extras install -y php7.2
-RUN yum install -y php-cli php-common php-mbstring php-process \
+RUN amazon-linux-extras install -y php7.2 \
+ && yum install -y php-cli php-common php-mbstring php-process \
 	php-xml php-xmlrpc php-soap php-json php-curl php-gd \
 	php-opcache php-pdo php-mysqlnd
 

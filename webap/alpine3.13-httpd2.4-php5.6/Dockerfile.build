@@ -1,0 +1,118 @@
+FROM library/alpine:3.13 as build
+
+RUN apk update \
+ && apk add autoconf dpkg dpkg-dev file \
+	g++ gcc glib make pkgconf re2c \
+	bison flex \
+	zlib zlib-dev libbz2 \
+	gettext gettext-dev \
+	readline readline-dev \
+	libmcrypt libmcrypt-dev \
+	expat expat-dev \
+	libxml2 libxml2-dev \
+	libpng libpng-dev \
+	postgresql-libs postgresql-dev
+
+ADD src/openssl-1.0.2u.tar.gz /build
+WORKDIR /build/openssl-1.0.2u
+RUN ./config \
+	--prefix=/usr/local \
+	--openssldir=/usr/local/openssl \
+	shared \
+ && make all install \
+ && cp -pR /usr/local/openssl/man /usr/local/share \
+ && rm -r /usr/local/openssl/man
+
+ADD src/pcre-8.44.tar.gz /build
+WORKDIR /build/pcre-8.44
+RUN ./configure \
+	--prefix=/usr/local/pcre \
+	--bindir=/usr/local/bin \
+	--libdir=/usr/local/lib \
+	--mandir=/usr/local/share/man \
+	--docdir=/usr/local/share/doc \
+	--includedir=/usr/local/include \
+	--enable-utf \
+	--enable-jit \
+	--enable-pcre-libz \
+	--enable-pcre-libbz2 \
+ && make all install
+
+ADD src/apr-1.7.0.tar.gz /build
+WORKDIR /build/apr-1.7.0
+RUN ./configure \
+	--prefix=/usr/local/apr \
+	--includedir=/usr/local/include \
+ && make all install
+
+ADD src/apr-util-1.6.1.tar.gz /build
+WORKDIR /build/apr-util-1.6.1
+RUN ./configure \
+	--prefix=/usr/local/apr-util \
+	--includedir=/usr/local/include \
+	--with-apr=/usr/local/apr \
+ && make all install
+
+ADD src/httpd-2.4.46.tar.gz /build
+WORKDIR /build/httpd-2.4.46
+RUN ./configure \
+	--prefix=/etc/httpd \
+	--bindir=/usr/local/bin \
+	--sbindir=/usr/local/bin \
+	--mandir=/usr/local/share/man \
+	--includedir=/usr/local/include \
+	--datadir=/var/www \
+	--with-apr=/usr/local/apr \
+	--with-apr-util=/usr/local/apr-util \
+	--with-pcre \
+	--with-libxml2 \
+	--with-ssl=/usr/local/openssl \
+	--with-z \
+	--enable-so \
+	--enable-cgi \
+	--enable-info \
+	--enable-rewrite \
+	--enable-speling \
+	--enable-usertrack \
+	--enable-deflate \
+	--enable-proxy \
+	--enable-ssl \
+ && make all install
+
+ADD src/php-5.6.40.tar.gz /build
+WORKDIR /build/php-5.6.40
+RUN ./configure \
+	--prefix=/usr/local/php \
+	--bindir=/usr/local/bin \
+	--libdir=/usr/local/lib \
+	--mandir=/usr/local/share/man \
+	--datadir=/usr/local/share \
+	--sysconfdir=/etc/php \
+	--includedir=/usr/local/include \
+	--enable-mbstring \
+	--without-imap \
+	--without-mysql \
+	--with-gettext \
+	--with-readline \
+	--with-mcrypt \
+	--with-zlib \
+	--with-openssl \
+	--with-pgsql \
+	--with-apxs2 \
+ && make all install
+
+# COPY to dist
+WORKDIR /
+RUN mkdir /dist \
+ && tar cf - \
+	usr/local/bin \
+	usr/local/lib \
+	usr/local/share \
+	usr/local/openssl \
+	usr/local/pcre \
+	usr/local/apr \
+	usr/local/apr-util \
+	etc/httpd \
+	var/www \
+	etc/php \
+	| tar xf - -C /dist

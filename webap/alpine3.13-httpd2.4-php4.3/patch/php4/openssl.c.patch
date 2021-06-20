@@ -1,0 +1,11 @@
+--- ext/openssl/openssl.c.orig
++++ ext/openssl/openssl.c
+@@ -43,7 +43,7 @@
+ 
+ #define DEFAULT_KEY_LENGTH	512
+ #define MIN_KEY_LENGTH		384
+-
++#define LHASH _LHASH
+ 
+ #define DEBUG_SMIME	0
+ 
